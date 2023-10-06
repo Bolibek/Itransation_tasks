@@ -4,13 +4,11 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-
 class KeyGenerator {
   static generateKey() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString('hex'); // 256 bits key
   }
 }
-
 class HMACCalculator {
   static calculateHMAC(key, message) {
     const hmac = crypto.createHmac('sha3-256', key);
@@ -18,7 +16,6 @@ class HMACCalculator {
     return hmac.digest('hex');
   }
 }
-
 class GameRules {
   constructor(moves) {
     this.moves = moves;
@@ -42,9 +39,7 @@ class GameRules {
       return 'Lose';
     }
   }
-
 }
-
 class TableGenerator {
   static generateTable(moves, rules) {
     const table = [['Move', ...moves]];
@@ -79,7 +74,7 @@ if (moves.length < 3 || moves.length % 2 === 0 || new Set(moves).size !== moves.
   process.exit(1);
 }
 
-const key = KeyGenerator.generateKey();
+let key = KeyGenerator.generateKey();
 
 function playGame() {
   const computerMove = moves[crypto.randomInt(moves.length)];
@@ -118,8 +113,16 @@ function playGame() {
         console.log(`You lose! ${computerMove} beats ${userMove}`);
       }
 
-      console.log(`Original Key: ${key}`);
-      rl.close();
+      rl.question("Enter the HMAC shown above: ", (userHMAC) => {
+        if (userHMAC === HMACCalculator.calculateHMAC(key, computerMove)) {
+          console.log("HMAC verified. It matches!");
+        } else {
+          console.log("HMAC does not match. Something might be wrong.");
+        }
+        console.log(`HMAC Key: ${key}`);
+        key = KeyGenerator.generateKey();
+        rl.close();
+      });
     }
   });
 }
